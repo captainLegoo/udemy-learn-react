@@ -1,126 +1,104 @@
-import ProjectsSidebar from "./components/ProjectsSidebar";
-import NewProject from "./components/NewProject.jsx";
-import NoProjectSelected from "./components/NoProjectSelected.jsx";
-import { useState } from "react";
-import SelectedProject from "./components/SelectedProject.jsx";
+import { useRef, useState, useEffect, useCallback } from 'react';
+
+import Places from './components/Places.jsx';
+import { AVAILABLE_PLACES } from './data.js';
+import Modal from './components/Modal.jsx';
+import DeleteConfirmation from './components/DeleteConfirmation.jsx';
+import logoImg from './assets/logo.png';
+import { sortPlacesByDistance } from './loc.js';
+
+const storedIds = JSON.parse(localStorage.getItem('selectedPlaces')) || [];
+const storedPlaces = storedIds.map(id =>
+  AVAILABLE_PLACES.find((place) => place.id === id)
+);
 
 function App() {
-  const [projectsState, setProjectsState] = useState({
-    selectedProjectId: undefined,
-    projects: [],
-    tasks: []
-  });
+  const selectedPlace = useRef();
+  const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [availablePlaces, setAvailablePlaces] = useState([]);
+  const [pickedPlaces, setPickedPlaces] = useState(storedPlaces);
 
-  function handleAddTask(text) {
-    setProjectsState(prevState => {
-      const taskId = Math.random();
-      const newTask = {
-        text: text,
-        projected: prevState.selectedProjectId,
-        id: taskId
+
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition((position) => {
+      const sortedPlaces = sortPlacesByDistance(
+        AVAILABLE_PLACES,
+        position.coords.latitude,
+        position.coords.longitude
+      );
+
+      setAvailablePlaces(sortedPlaces);
+    });
+  }, []);
+
+
+  function handleStartRemovePlace(id) {
+    setModalIsOpen(true);
+    selectedPlace.current = id;
+  }
+
+  function handleStopRemovePlace() {
+    setModalIsOpen(false);
+  }
+
+  function handleSelectPlace(id) {
+    setPickedPlaces((prevPickedPlaces) => {
+      if (prevPickedPlaces.some((place) => place.id === id)) {
+        return prevPickedPlaces;
       }
-
-      return {
-        ...prevState,
-        tasks: [newTask, ...prevState.tasks]
-      };
+      const place = AVAILABLE_PLACES.find((place) => place.id === id);
+      return [place, ...prevPickedPlaces];
     });
+
+    const storedIds = JSON.parse(localStorage.getItem('selectedPlaces')) || [];
+    if (storedIds.indexOf(id) === -1) {
+      localStorage.setItem('selectedPlaces', JSON.stringify([id, ...storedIds]));
+    }
   }
 
-  function handleDeleteTask(id) {
-    setProjectsState(prevState => {
-      return {
-        ...prevState,
-        tasks: prevState.tasks.filter(
-          (task) => task.id !== id
-        )
-      };
-    });
-  }
+  const handleRemovePlace = useCallback(function handleRemovePlace() {
+    setPickedPlaces((prevPickedPlaces) =>
+      prevPickedPlaces.filter((place) => place.id !== selectedPlace.current)
+    );
+    setModalIsOpen(false);
 
-  function handleSelectProject(id) {
-    setProjectsState(prevState => {
-      return {
-        ...prevState,
-        selectedProjectId: id
-      };
-    });
-  }
+    const storedIds = JSON.parse(localStorage.getItem('selectedPlaces')) || [];
+    localStorage.setItem('selectedPlaces', JSON.stringify(storedIds.filter((id) => id !== selectedPlace.current)));
+  }, []);
 
-  function handleStartAddProject() {
-    setProjectsState(prevState => {
-      return {
-        ...prevState,
-        selectedProjectId: null
-      };
-    });
-  }
-
-  function handleCancleAddProject() {
-    setProjectsState(prevState => {
-      return {
-        ...prevState,
-        selectedProjectId: undefined
-      };
-    });
-  }
-
-  function handleAddProject(projectData) {
-    setProjectsState(prevState => {
-      const projectId = Math.random();
-      const newProject = {
-        ...projectData,
-        id: projectId
-      }
-
-      return {
-        ...prevState,
-        selectedProjectId: undefined,
-        projects: [...prevState.projects, newProject]
-      };
-    });
-  }
-
-  function hadnleDeleteProject() {
-    setProjectsState(prevState => {
-      return {
-        ...prevState,
-        selectedProjectId: undefined,
-        projects: prevState.projects.filter(
-          (project) => project.id !== prevState.selectedProjectId
-        )
-      };
-    });
-  }
-
-  const selectedProject = projectsState.projects.find(project => project.id === projectsState.selectedProjectId);
-
-  let content = (
-    <SelectedProject
-      project={selectedProject}
-      tasks={projectsState.tasks}
-      onDelete={hadnleDeleteProject}
-      onAddTask={handleAddTask}
-      onDeleteTask={handleDeleteTask}
-    />
-  );
-
-  if (projectsState.selectedProjectId === null) {
-    content = <NewProject onAdd={handleAddProject} onCancle={handleCancleAddProject} />
-  } else if (projectsState.selectedProjectId === undefined) {
-    content = <NoProjectSelected onStartAddProject={handleStartAddProject} />
-  }
 
   return (
-    <main className="h-screen my-8 flex gap-8">
-      <ProjectsSidebar
-        onStartAddProject={handleStartAddProject}
-        projects={projectsState.projects}
-        onSelectProject={handleSelectProject}
-        selectedProjectId={projectsState.selectedProjectId}
-      />
-      {content}
-    </main>
+    <>
+      <Modal open={modalIsOpen} onClose={handleStopRemovePlace}>
+        <DeleteConfirmation
+          onCancel={handleStopRemovePlace}
+          onConfirm={handleRemovePlace}
+        />
+      </Modal>
+
+      <header>
+        <img src={logoImg} alt="Stylized globe" />
+        <h1>PlacePicker</h1>
+        <p>
+          Create your personal collection of places you would like to visit or
+          you have visited.
+        </p>
+      </header>
+      <main>
+        <Places
+          title="I'd like to visit ..."
+          fallbackText={'Select the places you would like to visit below.'}
+          places={pickedPlaces}
+          onSelectPlace={handleStartRemovePlace}
+        />
+        <Places
+          title="Available Places"
+          places={availablePlaces}
+          fallbackText="Sorting places by distance..."
+          onSelectPlace={handleSelectPlace}
+        />
+      </main>
+    </>
   );
 }
 
