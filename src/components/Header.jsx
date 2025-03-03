@@ -1,13 +1,10 @@
-import { log } from '../log.js';
-import logoImg from '../assets/logo.png';
+import logoImg from '../assets/logo.jpg';
 
 export default function Header() {
-  log('<Header /> rendered', 1);
-
   return (
-    <header id="main-header">
-      <img src={logoImg} alt="Magnifying glass analyzing a document" />
-      <h1>React - Behind The Scenes</h1>
+    <header>
+      <img src={logoImg} alt="A form and a pencil" />
+      <h1>React Forms</h1>
     </header>
   );
 }
