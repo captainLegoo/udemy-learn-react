@@ -1,14 +1,17 @@
-import Header from './components/Header.jsx';
-import Login from './components/StateLogin.jsx';
-import Signup from './components/Signup.jsx';
+import { Header } from './components/Header';
+import { Opinions } from './components/Opinions';
+import { NewOpinion } from './components/NewOpinion';
+import { OpinionsContextProvider } from './store/opinions-context';
 
 function App() {
   return (
     <>
       <Header />
       <main>
-        <Login />
-        {/* <Signup /> */}
+        <OpinionsContextProvider>
+          <NewOpinion />
+          <Opinions />
+        </OpinionsContextProvider>
       </main>
     </>
   );

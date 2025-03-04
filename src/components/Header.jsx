@@ -1,10 +1,11 @@
-import logoImg from '../assets/logo.jpg';
-
-export default function Header() {
+export function Header() {
   return (
-    <header>
-      <img src={logoImg} alt="A form and a pencil" />
-      <h1>React Forms</h1>
+    <header id="main-header">
+      <h1>OpinionBoard</h1>
+      <p>
+        Strong opinions, judged by anonymous internet users. What could possibly
+        go wrong?
+      </p>
     </header>
   );
 }
