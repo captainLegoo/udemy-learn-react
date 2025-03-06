@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useActionState } from "react";
 import useHttp from "../hoooks/useHttp.js";
 import CartContext from "../store/CartContext";
 import UserProgressContext from "../store/UserProgressContext";
@@ -21,7 +21,6 @@ export default function Checkout() {
 
   const {
     data,
-    isLoading: isSending,
     error,
     sendRequest,
     clearData
@@ -53,6 +52,19 @@ export default function Checkout() {
     }));
   }
 
+  async function checkoutAction(prevState, formData) {
+    const customerData = Object.fromEntries(formData.entries());
+
+    await sendRequest(JSON.stringify({
+      order: {
+        items: cartCtx.items,
+        customer: customerData
+      }
+    }));
+  }
+
+  const [formState, formAction, isSending] = useActionState(checkoutAction, null);
+
   let actions = (
     <>
       <Button type="button" textOnly onClick={handleClose}>Close</Button>
@@ -77,7 +89,8 @@ export default function Checkout() {
 
   return (
     <Modal open={userProgressCtx.progress === 'checkout'} onClose={handleClose}>
-      <form onSubmit={handleSubmit}>
+      {/* <form onSubmit={handleSubmit}> */}
+      <form action={formAction}>
         <h2>Checkout</h2>
         <p>Total Amount: {currencyFormatter.format(cartTotal)}</p>
 
