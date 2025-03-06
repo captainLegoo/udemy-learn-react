@@ -1,18 +1,21 @@
-import { Header } from './components/Header';
-import { Opinions } from './components/Opinions';
-import { NewOpinion } from './components/NewOpinion';
-import { OpinionsContextProvider } from './store/opinions-context';
+import Cart from "./components/Cart.jsx";
+import Checkout from "./components/Checkout.jsx";
+import Header from "./components/Header.jsx";
+import Meals from "./components/Meals.jsx";
+import { CartContextProvider } from "./store/CartContext.jsx";
+import { UserProgressContextProvider } from "./store/UserProgressContext.jsx";
 
 function App() {
   return (
     <>
-      <Header />
-      <main>
-        <OpinionsContextProvider>
-          <NewOpinion />
-          <Opinions />
-        </OpinionsContextProvider>
-      </main>
+      <UserProgressContextProvider>
+        <CartContextProvider>
+          <Header />
+          <Meals />
+          <Cart />
+          <Checkout />
+        </CartContextProvider>
+      </UserProgressContextProvider>
     </>
   );
 }
