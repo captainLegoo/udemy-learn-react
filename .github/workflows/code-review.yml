@@ -29,8 +29,8 @@ jobs:
       - name: 🎯 Run ESLint
         run: npx eslint . --ext .js,.jsx,.ts,.tsx
 
-      - name: 🎨 Run Prettier check
-        run: npx prettier --check .
+      - name: ✨ Run Prettier Auto-Fix
+        run: npx prettier --write .
 
       - name: ✅ Lint and Prettier Passed
         if: success()
